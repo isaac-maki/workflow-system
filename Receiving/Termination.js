@@ -11,7 +11,7 @@ function termination() {
     logPurchaseOrderDrop();
     logComponentsDrop();
     transactionDrop();
-    //updateSitesWhenReceiving(); Lets wait until were sure this'll work for our use cases
+    updateSitesWhenReceiving(); 
     
     clearReceive();
     resetPrintedBoolean();
@@ -242,5 +242,5 @@ function updateSitesWhenReceiving() {
     }
 
     let bubbaBathResponse = UrlFetchApp.fetch('https://bubbabath.tk/ez-bridge-test/?v=159753'+updateQueryString);
-    // TODO: should we log responses?
+    Logger.log(bubbaBathResponse.getContentText());
 }
