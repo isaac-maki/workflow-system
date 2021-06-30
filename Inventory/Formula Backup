@@ -1,0 +1,16 @@
+This is for Components!I5 (AA0000)
+
+=ARRAYFORMULA(
+    IF(
+        LEN(C5:C),
+            IF(I5:I = "",
+                IF(
+                    COUNTIF('.onOrder'!D5:D,C5:C)>=1,
+                    "PO# " & VLOOKUP(C5:C,'.onOrder'!D5:F,3,FALSE) & " / " & VLOOKUP(C5:C,'.onOrder'!D5:I,5,FALSE) & " / " & VLOOKUP(C5:C,'.onOrder'!D5:I,6,FALSE) & " " & F5:F,
+                    "--"), 
+                IF(
+                    COUNTIF('.pendingBatches'!F5:F,C5:C)>=1,
+                    "BPR# " & VLOOKUP(C5:C,'.pendingBatches'!F5:L,7,FALSE) & " / " & VLOOKUP(C5:C,'.pendingBatches'!F5:L,3,FALSE) & " lbs" ,"--")),""))
+
+
+---
