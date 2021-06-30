@@ -11,7 +11,8 @@ function termination() {
     logPurchaseOrderDrop();
     logComponentsDrop();
     transactionDrop();
-
+    //updateSitesWhenReceiving(); Lets wait until were sure this'll work for our use cases
+    
     clearReceive();
     resetPrintedBoolean();
         
@@ -226,4 +227,20 @@ function clearReceive() {
     sheet.getRange('D5').setValue('FALSE');
 
 
+}
+
+
+function updateSitesWhenReceiving() {
+    let data = ss.getSheetByName('.receiveData');
+    let count = data.getRange('L5').getValue();
+    let payload = data.getRange('L7:R' + (count + 6)).getValues();
+    let updateQueryString = '';
+    let i = 0;
+    while (i < payload.length){
+        updateQueryString += '&i'+payload[i][0]+'='+payload[i][4];
+        i++;
+    }
+
+    let bubbaBathResponse = UrlFetchApp.fetch('https://bubbabath.tk/ez-bridge-test/?v=159753'+updateQueryString);
+    // TODO: should we log responses?
 }
