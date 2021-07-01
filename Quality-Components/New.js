@@ -104,10 +104,10 @@ function utilityBuildSpecification(type, q1, q2 = null) {
             specification = "< " + q1;
             break;
         case 'Minimum':
-            specification = q1 + 'Minimum';
+            specification = q1 + ' Minimum';
             break;
         case "Maximum":
-            specification = q1 + 'Maximum';
+            specification = q1 + ' Maximum';
             break;
         case 'Standard':
             specification = q1;
@@ -154,7 +154,7 @@ function buildSpecificationArray() {
         let cidAp = cid + '-' + apId;
 
         // pushes to array that will be dropped onto ComponentsParameters!
-        coaParameters.specificationPushArray.push([cidAp, cid, apId, analyticalProperty, q1, q2, specification, uom]);
+        coaParameters.specificationPushArray.push([cidAp, cid, apId, analyticalProperty,type, q1, q2, specification, uom]);
 
         i++;
         
@@ -175,21 +175,19 @@ function pushAliases() {
         i++;
     }
 
-    let range = CoffeeMaki.dropZoneRangeAlt(sp, 'N', 'O', 6, 'N4', array.length);
+    let range = CoffeeMaki.dropZoneRangeAlt(sp, 'O', 'P', 6, 'O4', array.length);
     range.setValues(array);
     CoffeeMaki.setBorderStandard(range);
-    CoffeeMaki.rangeSort(sp, 'N', 'O', 6, 'N4'); 
+    CoffeeMaki.rangeSort(sp, 'O', 'P', 6, 'O4'); 
 
 }
 
 function pushParameterArray() {
 
     let array = coaParameters.specificationPushArray;
-    let range = CoffeeMaki.dropZoneRangeAlt(sp, 'C', 'J', 6, 'C4', array.length);
+    let range = CoffeeMaki.dropZoneRangeAlt(sp, 'C', 'K', 6, 'C4', array.length);
     range.setValues(array);
     CoffeeMaki.setBorderStandard(range);
-    CoffeeMaki.rangeSort(sp, 'C', 'J', 6, 'C4'); 
-
 }
 
 function pushNewUomArray() {
@@ -206,20 +204,21 @@ function pushNewUomArray() {
 function pushNewParametersArray() {
 
     let array = coaParameters.newParameters;
-    let range = CoffeeMaki.dropZoneRangeAlt(pl, 'H', 'J', 6, 'H4', array.length);
+    let range = CoffeeMaki.dropZoneRangeAlt(pl, 'G', 'I', 6, 'G4', array.length);
     range.setValues(array);
     CoffeeMaki.setBorderStandard(range);
-    CoffeeMaki.rangeSort(pl, 'H', 'J', 6, 'H4'); 
+    CoffeeMaki.rangeSort(pl, 'G', 'I', 6, 'G4'); 
 
 
 }
 
 function pushComponentPublicity() {
     
-    let range = CoffeeMaki.dropZoneRangeAlt(pl, 'H', 'J', 6, 'H4', array.length);
+    let array = [[coaParameters.cid, coaParameters.isPublic]];
+    let range = CoffeeMaki.dropZoneRangeAlt(sp, 'T', 'U', 6, 'T4', array.length);
     range.setValues(array);
     CoffeeMaki.setBorderStandard(range);
-    CoffeeMaki.rangeSort(pl, 'H', 'J', 6, 'H4'); 
+    CoffeeMaki.rangeSort(sp, 'T', 'U', 6, 'T4'); 
     
 }
 function clearNewForm() {
@@ -228,6 +227,7 @@ function clearNewForm() {
     ne.getRange('C19:C21').clearContent();
     ne.getRange('H6:K51').clearContent();
     ne.getRange('M6:M51').clearContent();
+    ne.getRange('C26').clearContent();
 
 }
 
@@ -239,6 +239,7 @@ function executeCoaParameters() {
     if (coaParameters.boolNewUom) {pushNewUomArray()};
     if (coaParameters.boolNewParameter) {pushNewParametersArray()};
     pushParameterArray();
+    pushComponentPublicity();
     clearNewForm();
 
 }

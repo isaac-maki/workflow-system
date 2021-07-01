@@ -9,6 +9,9 @@ const ui = SpreadsheetApp.getUi();
 const ne = ss.getSheetByName('New');
 const sp = ss.getSheetByName('Specifications');
 const pl = ss.getSheetByName('PropertiesList');
+const ma = ss.getSheetByName('Main');
+const co = ss.getSheetByName('COA');
+const qn = ss.getSheetByName('qualityNotes');
 
 
 
