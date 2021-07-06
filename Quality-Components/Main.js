@@ -12,6 +12,7 @@ const pl = ss.getSheetByName('PropertiesList');
 const ma = ss.getSheetByName('Main');
 const co = ss.getSheetByName('COA');
 const qn = ss.getSheetByName('qualityNotes');
+const ar = ss.getSheetByName('Archive');
 
 
 
@@ -24,8 +25,4 @@ function onOpen(e) {
         .addSeparator()
         .addItem('Two', '')
         .addToUi();
-  }
- 
-
-
-  
+}

@@ -3,11 +3,14 @@
 const entry = {
     lot: 'lot',
     date: 'date',
+    name: 'name',
     data: [],
     retainPassInspection: true,
     oos: false, // out of specification, true if any one result doesn't meet spec
     oosProperties: [],
-    coaResults: []
+    coaResults: [],
+    aliases: [],
+    incomingInspection: false
 };
 
 function saveEntryBasics() {
@@ -15,6 +18,10 @@ function saveEntryBasics() {
     // saves lot
     let lot = ma.getRange('C6').getValue();
     entry.lot = lot;
+
+    // saves name
+    let name = ma.getRange('C14').getValue();
+    entry.name = name;
 
     // saves main data
     let data = CoffeeMaki.getDataArray(ma, 'H4', 'H6:N', 5);
@@ -135,7 +142,73 @@ function utilityDeconstructLot() {
     let date = new Date(testYear, month, day,0,0,0,0);
 
     entry.date = date;
-}   
+}
+
+function utilityBuildAndDropCoaResults() {
+
+    let data = entry.data;
+    let i = 0;
+
+    while (i < data.length) {
+
+        let ap = data[i][0];
+        let specification = data[i][1];
+        let result = data[i][6];
+        let uom = data[i][2];
+        let status = 'Pass';
+
+        let row = [ap, null, null, null, specification, result, uom, status];
+
+        entry.coaResults.push(row);
+        i++;
+    }
+
+    let range = co.getRange('B21:I' + (20 + entry.coaResults.length));
+    range.setValues(entry.coaResults);
+}
+
+function utilityGenerateCoaPdf() {
+
+    const url = 'https://docs.google.com/spreadsheets/d/1aMtyRB00joK9Aw-nvfPobfFBw8JZp2I_n467mzCGmzM/export?';
+
+    let filename = `${entry.aliases[0]} [${entry.lot}] COA.pdf`
+
+    // PDF Options
+
+    pdfOptions =
+        'exportFormat=pdf&format=pdf' +
+        '&size=letter' +
+        '&portrait=true' +
+        '&fitw=true' +
+        '&top_margin=0.20' +            
+        '&bottom_margin=0.20' +         
+        '&left_margin=0.20' +        
+        '&right_margin=0.20' + 
+        '&sheetnames=false&printtitle=false' +
+        '&pagenumbers=false&gridlines=false' +
+        '&fzr=false' +
+        '&gid=448691412';
+    
+    // PDF parameters 
+
+    var params = {method:"GET",headers:{"authorization":"Bearer "+ ScriptApp.getOAuthToken()}};
+
+    // PDF generation
+    
+    var response = UrlFetchApp.fetch(url+pdfOptions, params).getBlob();
+
+    // File parameters
+    var folder = DriveApp.getFolderById('1cwwk-OAg3YivfvX05-EfzrCv7HfGEFOV'); 
+
+    // Save file to google drive
+    let document = folder.createFile(response.setName(filename));
+
+    let documentUrl = document.getUrl();
+
+    return documentUrl;
+     
+
+}
 
 function runSpecificationExams() {
 
@@ -177,6 +250,8 @@ function runBuildAndDropCoaDetails() {
 
     // push elements to coa sheet
     co.getRange('D11').setValue(name);
+    co.getRange('D66').setValue(name);
+    co.getRange('D133').setValue(name);
     co.getRange('D12').setValue(cid);
     co.getRange('D13').setValue(aliases);
     co.getRange('D14').setValue(dom);
@@ -184,29 +259,6 @@ function runBuildAndDropCoaDetails() {
     co.getRange('H11').setValue(lot);
     co.getRange('H12').setValue(lotAlias);
 
-}
-
-function utilityBuildAndDropCoaResults() {
-
-    let data = entry.data;
-    let i = 0;
-
-    while (i < data.length) {
-
-        let ap = data[i][0];
-        let specification = data[i][1];
-        let result = data[i][6];
-        let uom = data[i][2];
-        let status = 'Pass';
-
-        let row = [ap, null, null, null, specification, result, uom, status];
-
-        entry.coaResults.push(row);
-        i++;
-    }
-
-    let range = co.getRange('B21:I' + (20 + entry.coaResults.length));
-    range.setValues(entry.coaResults);
 }
 
 
@@ -278,12 +330,5 @@ function executeEntry() {
         executeCoaGeneration();
     }
 
-
-}
-
-function test(){
-    saveEntryBasics();
-
-    Logger.log(entry.data);
 
 }
