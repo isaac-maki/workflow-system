@@ -21,8 +21,13 @@ const ar = ss.getSheetByName('Archive');
 function onOpen(e) {
     SpreadsheetApp.getUi()
         .createMenu('Maki Operations')
-        .addItem('One', '')
+        .addSubMenu(SpreadsheetApp.getUi().createMenu('Reset')
+        .addItem('Main / COA', 'clearEntryAll')
+        .addItem('New', 'clearNewForm'))
         .addSeparator()
-        .addItem('Two', '')
+        .addSubMenu(SpreadsheetApp.getUi().createMenu('Toggles')
+        .addItem('Main / Extra Parameters', 'toggleMainExtraParameters'))
+        .addSeparator()
+        .addItem('Commit Lot Quick Add', 'utilityQuickAddLot')
         .addToUi();
 }

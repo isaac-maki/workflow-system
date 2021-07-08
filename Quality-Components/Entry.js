@@ -3,6 +3,7 @@
 const entry = {
     lot: 'lot',
     date: 'date',
+    expiry: 'expiry',
     name: 'name',
     data: [],
     retainPassInspection: true,
@@ -10,8 +11,29 @@ const entry = {
     oosProperties: [],
     coaResults: [],
     aliases: [],
-    incomingInspection: false
+    incomingInspection: false,
+    publicCoaUrl: 'url',
+    quickAddLot: 'lot'
 };
+
+function toggleMainExtraParameters() {
+
+    let hidden = pl.getRange('Q6');
+
+    if (hidden.getValue()) {
+
+        ma.showColumns(11,3);
+        hidden.setValue(false);
+
+
+    } else {
+
+        ma.hideColumns(11,3);
+        hidden.setValue(true);
+
+    }
+
+}
 
 function saveEntryBasics() {
 
@@ -32,7 +54,7 @@ function saveEntryBasics() {
     entry.retainPassInspection = retain;
 
     // save aliases
-    let aliases = CoffeeMaki.getDataArray(ma, 'V24', 'V20:V', 19);
+    let aliases = CoffeeMaki.getDataArray(ma, 'R22', 'R18:R', 17);
     entry.aliases = aliases;
 
     // save incoming inspection
@@ -171,7 +193,15 @@ function utilityGenerateCoaPdf() {
 
     const url = 'https://docs.google.com/spreadsheets/d/1aMtyRB00joK9Aw-nvfPobfFBw8JZp2I_n467mzCGmzM/export?';
 
-    let filename = `${entry.aliases[0]} [${entry.lot}] COA.pdf`
+    let productName;
+
+    if (entry.aliases.length > 0) {
+        productName = entry.aliases[0];
+    } else {
+        productName = entry.name;
+    }
+
+    let filename = `${productName} [${entry.lot}] COA.pdf`;
 
     // PDF Options
 
@@ -205,10 +235,96 @@ function utilityGenerateCoaPdf() {
 
     let documentUrl = document.getUrl();
 
-    return documentUrl;
+    entry.publicCoaUrl = documentUrl;
      
 
 }
+
+function utilityCommitToArchive() {
+
+    // defining parameters not previously saved
+    let cid = ma.getRange('C11').getValue();
+    let po = ma.getRange('C20').getValue();
+    let supplierLot = ma.getRange('C17').getValue();
+    let qualityNotes = ma.getRange('C27').getValue();
+    
+    // retrieve and make pdf icons
+    let publicPdf = utilityBuildPdfIcon(entry.publicCoaUrl);
+    let supplierPdfName = `${entry.name} [${supplierLot}] COA.pdf`;
+    let supplierPdfUrl = runGetFileUrl('10QxO3YQ_74P9Lukr1zfZKUg4bdlg4bEF',supplierPdfName);
+    let supplierPdf = utilityBuildPdfIcon(supplierPdfUrl);
+
+    // build payload
+    let payload = [[entry.lot, cid, entry.name, entry.aliases[0], po, supplierLot, qualityNotes, entry.date, entry.expiry, supplierPdf, publicPdf, supplierPdfUrl, entry.publicCoaUrl]];
+
+    // delivery
+    let range = CoffeeMaki.dropZoneRangeAlt(ar, 'C', 'O', 6, 'C4', payload.length);
+    range.setValues(payload);
+    CoffeeMaki.setBorderStandard(range);
+    CoffeeMaki.rangeSort(ar, 'C', 'O', 6, 'C4');
+
+}
+
+function utilityBuildPdfIcon(url) {
+    
+    let icon = 'https://i.imgur.com/8GbOraM.png';
+    let formula = `=HYPERLINK(\"${url}\",IMAGE(\"${icon}\"))`;
+    return formula;
+
+}
+
+function utilityQuickAddLot() {
+    
+    // define  data zones
+    let cid = ma.getRange('V15');
+    let date = ma.getRange('V9');
+    let supplierLot = ma.getRange('V12');
+    let runBool = false;
+    let payload = [];
+
+    // ensure not blank
+
+    if (cid.isBlank() || date.isBlank() || supplierLot.isBlank()) {
+
+        ui.alert('Quick add requires a Product with a CID, DOM, and Supplier Lot. Try again mate.');
+
+    } else {
+
+        runBool = true;
+        let lot = CoffeeMaki.lotGenerator(cid.getValue(),date.getValue());
+        entry.quickAddLot = lot;
+        payload.push([cid.getValue(), null, lot, supplierLot.getValue(),null, null,null, null,null, null ]);
+
+    }
+
+    if (runBool) {
+
+        //drop payload
+        let sheet = SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/1NWCUI00OaEmKnvnCaElQKQ3YxXbqYvp_cko9IZIVC3o/edit').getSheetByName("Inventory");
+        let dropZone = CoffeeMaki.dropZoneRangeAlt(sheet, 'C', 'L', 6, 'C4', payload.length);
+        dropZone.setValues(payload);
+        CoffeeMaki.setBorderStandard(dropZone);
+        CoffeeMaki.rangeSort(sheet, 'C', 'L', 6, 'C4');
+
+    }
+
+    ma.getRange('V6').clearContent();
+    date.clearContent();
+    supplierLot.clearContent();
+
+}
+
+function runGetFileUrl(folderId, name) {
+
+    let files = DriveApp.getFolderById(folderId).getFilesByName(name);
+    while (files.hasNext()) {
+        let file = files.next();
+        return file.getUrl();
+    }
+
+}
+
+
 
 function runSpecificationExams() {
 
@@ -231,6 +347,7 @@ function runSpecificationExams() {
 
 function runBuildAndDropCoaDetails() {
 
+    // parameters
     let name = ma.getRange('C14').getValue();
     let cid = ma.getRange('C11').getValue();1
     let aliases = entry.aliases.flat();
@@ -251,7 +368,7 @@ function runBuildAndDropCoaDetails() {
     // push elements to coa sheet
     co.getRange('D11').setValue(name);
     co.getRange('D66').setValue(name);
-    co.getRange('D133').setValue(name);
+    co.getRange('D131').setValue(name);
     co.getRange('D12').setValue(cid);
     co.getRange('D13').setValue(aliases);
     co.getRange('D14').setValue(dom);
@@ -273,14 +390,21 @@ function runOutOfSpecificationCheck() {
         let timestamp = new Date();
         let lot = entry.lot;
         let type = 'OOS';
-        let note = 'The following specifications were out of specification: ' + entry.oosProperties + '.';
+        let note = 'The following specifications were out of specification during QA-Components/Main!: ' + entry.oosProperties + '.';
         let by = Session.getActiveUser().getEmail();
 
         let log = [[timestamp, lot, type, note, null, by]];
         
+        /* changing where it is dumping
         let range = CoffeeMaki.dropZoneRangeAlt(qn, 'C', 'H', 6, 'C4', log.length);
         range.setValues(log);
         CoffeeMaki.setBorderStandard(range);
+        */
+
+        const ls = SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/1wDYokdYMP4TM0BP6w-ukVztepYJ_EGQto-UJb-Vzk7A/edit').getSheetByName('QualityAlerts');
+        let range = CoffeeMaki.dropZoneRange(ls,'A', 'F', 1);
+        range.setValues(log);
+
     }
 }
 
@@ -302,6 +426,11 @@ function runAditionalInspections() {
 
 }
 
+function runtWait(){
+    var lock = LockService.getScriptLock(); lock.waitLock(300000); 
+    SpreadsheetApp.flush(); lock.releaseLock();
+  }
+
 function executeResultQA() {
 
     runAditionalInspections();
@@ -314,8 +443,13 @@ function executeResultQA() {
 
 function executeCoaGeneration() {
 
+    clearEntryCoa();
+    runtWait();
     runBuildAndDropCoaDetails();
     utilityBuildAndDropCoaResults();
+    Logger.log('Data entered...generated COA now...')
+    runtWait();
+    utilityGenerateCoaPdf();
   
 
 }
@@ -328,7 +462,31 @@ function executeEntry() {
 
     if (!entry.oos) {
         executeCoaGeneration();
+        utilityCommitToArchive();
+      
+    } else {
+        ui.alert('Something appears to have failed or is OOS. Pleae investigate.');
     }
+    clearEntryAll();
 
+}
 
+function clearEntryAll() {
+
+    ma.getRange('C6').clearContent();
+    ma.getRange('N6:N51').clearContent();
+    ma.getRange('R6').setValue(2);
+    ma.getRange('R9').clearContent();
+    ma.getRange('R12').setValue(true);
+
+    
+}
+
+function clearEntryCoa() {
+
+    // this lived in the clearEntryAll, but it seems that it was clearing the data faster than the generator was generating. For this reason it will be left and cleared at the start of the next coa generation
+
+    co.getRange('D11:D15').clearContent();
+    co.getRange('H11:H12').clearContent();
+    co.getRange('B21:I64').clearContent();
 }

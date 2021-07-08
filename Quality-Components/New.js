@@ -22,7 +22,11 @@ function saveCoaBasics() {
 
     // save if public
     let public = ne.getRange('C26').getValue();
-    coaParameters.isPublic = public;
+    if (public) {
+        coaParameters.isPublic = true;
+    } else {
+        coaParameters.isPublic = false;
+    }
 
 }
 
