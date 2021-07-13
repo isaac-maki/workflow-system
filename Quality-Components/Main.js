@@ -29,5 +29,6 @@ function onOpen(e) {
         .addItem('Main / Extra Parameters', 'toggleMainExtraParameters'))
         .addSeparator()
         .addItem('Commit Lot Quick Add', 'utilityQuickAddLot')
+        .addItem('Entry Bypass Mode', 'executeBypassMode')
         .addToUi();
 }

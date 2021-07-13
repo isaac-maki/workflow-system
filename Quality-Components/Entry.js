@@ -13,7 +13,8 @@ const entry = {
     aliases: [],
     incomingInspection: false,
     publicCoaUrl: 'url',
-    quickAddLot: 'lot'
+    quickAddLot: 'lot',
+    bypassMode: false
 };
 
 function toggleMainExtraParameters() {
@@ -54,12 +55,28 @@ function saveEntryBasics() {
     entry.retainPassInspection = retain;
 
     // save aliases
-    let aliases = CoffeeMaki.getDataArray(ma, 'R22', 'R18:R', 17);
-    entry.aliases = aliases;
+    utilityPullAliases();
+
 
     // save incoming inspection
     let incomingInspection = ma.getRange('C24').getValue();
     entry.incomingInspection = incomingInspection;
+
+    // get if bypass mode active
+    let bypassMode = pl.getRange('Q9').getValue();
+    entry.bypassMode = bypassMode;
+
+}
+
+function utilityPullAliases() {
+    let aliasCount = ma.getRange('R22').getValue();
+    let aliases;
+    if (aliasCount > 0) {
+        aliases = CoffeeMaki.getDataArray(ma, 'R22', 'R18:R', 17);
+    } else {
+        aliases = [' ', ' '];
+    }
+    entry.aliases = aliases;
 }
 
 
@@ -429,7 +446,13 @@ function runAditionalInspections() {
 function runtWait(){
     var lock = LockService.getScriptLock(); lock.waitLock(300000); 
     SpreadsheetApp.flush(); lock.releaseLock();
-  }
+}
+
+function executeBypassMode() {
+
+    pl.getRange('Q9').setValue(true);
+
+}
 
 function executeResultQA() {
 
@@ -458,7 +481,10 @@ function executeEntry() {
 
     saveEntryBasics();
     utilityDeconstructLot()
-    executeResultQA();
+
+    if (!entry.bypassMode) {
+        executeResultQA();
+    }
 
     if (!entry.oos) {
         executeCoaGeneration();
@@ -478,6 +504,7 @@ function clearEntryAll() {
     ma.getRange('R6').setValue(2);
     ma.getRange('R9').clearContent();
     ma.getRange('R12').setValue(true);
+    pl.getRange('Q9').setValue(false);
 
     
 }
