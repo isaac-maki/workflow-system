@@ -42,7 +42,7 @@ function pathwayProductionPriceLock() {
 function buildCommitProductionHistory() {
 
     let noteCount = pd.getRange('D31').getValue();
-    let notesRaw = pd.getRange('V28:V' + (27 + noteCount)).getValues().flat();
+    let notesRaw = ps.getRange('V28:V' + (27 + noteCount)).getValues().flat();
     let notes = notesRaw.join(' ; ');
 
     let sysLogsCount = pd.getRange('T4').getValue();
@@ -54,8 +54,9 @@ function buildCommitProductionHistory() {
     let productionCost = pd.getRange('I8').getValue();
     let finalCost = pd.getRange('I10').getValue();
     let summaryPdfFormula = `=HYPERLINK(\"${productionData.productionSummaryPdfUrl}\",IMAGE(\"https://i.imgur.com/8GbOraM.png\"))`;
+    let pdfUrl = productionData.productionSummaryPdfUrl;
 
-    let data = [[cid, timestamp, sysLogs, notes, productionCost, finalCost, summaryPdfFormula]];
+    let data = [[cid, timestamp, sysLogs, notes, productionCost, finalCost, summaryPdfFormula, pdfUrl]];
 
     return data;
 
@@ -159,7 +160,7 @@ function commitProductionHistory() {
 
     let data = buildCommitProductionHistory();
 
-    let range = CoffeeMaki.dropZoneRangeAlt(hs, 'C', 'I', 6, 'C4', data.length);
+    let range = CoffeeMaki.dropZoneRangeAlt(hs, 'C', 'j', 6, 'C4', data.length);
 
     range.setValues(data);
     CoffeeMaki.setBorderStandard(range);

@@ -77,18 +77,31 @@ function pullBillOfMaterials() {
 
 function pullLastPrice(cid) {
 
+    // sets the purchases archive equal to data
     let data = productionData.purchasesArchive[0];
     
+
+    // finds the index of the last po that the component with cid was purchased
     let purchases = data.filter(function(component) {
 
         return component[0] === cid;
     });
 
     let purchaseOrders = purchases.map(x => x[1]);
- 
+    
     let maxIndex = purchaseOrders.indexOf(Math.max.apply(null,purchaseOrders));
 
+    // cheeks if unit must be converted
+    // if so it converts, otherwise it is printed from purchases
     let price = purchases[maxIndex][2];
+
+    let uom = purchases[maxIndex][3];
+
+    if (uom === 'kg' || uom === 'kgs') {
+
+        price = price/2.20462;
+
+    } 
 
     return price;
   
@@ -99,7 +112,7 @@ function pullProductionHistory() {
     let hi = ss.getSheetByName('History');
     let cid = pd.getRange('D6').getValue();
     let count = hi.getRange('C4').getValue();
-    let data = hi.getRange('C6:I' + (5 + count)).getValues();
+    let data = hi.getRange('C6:J' + (5 + count)).getValues();
     let i = 0;
     let history = [];
 
@@ -115,7 +128,8 @@ function pullProductionHistory() {
         let usernotes = historyRaw[i][3];
         let production = historyRaw[i][4];
         let final = historyRaw[i][5];
-        let report = historyRaw[i][6].toString();
+        let reportUrl = historyRaw[i][7];
+        let report = `=HYPERLINK(\"${reportUrl}\",IMAGE(\"https://i.imgur.com/8GbOraM.png\"))`;
 
         history.push([timestamp, null, usernotes, null, production, final, report]);
 
@@ -190,7 +204,7 @@ function savePurchasesArchive() {
 
     let sheet = ss.getSheetByName('Purchases Archive');
     let count = sheet.getRange('C4').getValue();
-    let data = sheet.getRange('D6:F' + (5 + count)).getValues();
+    let data = sheet.getRange('D6:G' + (5 + count)).getValues();
     productionData.purchasesArchive.push(data);
 
 }
@@ -210,6 +224,7 @@ function assembleBillOfMaterialsCosting() {
         let cid = bomRaw[i][1];
         let concentration = bomRaw[i][2];
         let nameFormula = '=VLOOKUP(H' + (i + 6) + ',Components!C5:D,2,FALSE)';
+        Logger.log('now pulling: ' + cid);
         let lastPrice = pullLastPrice(cid);
         let markup = lastPrice * rawMaterialMarkupPercentage;
         let costPerPoundProduct = markup * (concentration * 0.01);
@@ -300,6 +315,7 @@ function clearProductionBasicData() {
 
     ps.getRange('W8').clearContent();
     ps.getRange('W10').clearContent();
+    ps.getRange('V28:V32').clearContent();
 
 }
 
@@ -318,6 +334,10 @@ function clearProductionBillOfMaterials() {
 function clearProductionFillWeights() {
 
     pd.getRange('N19:O21').clearContent();
+    ps.getRange('V23:V24').setValue('Custom');
+    ps.getRange('X20:X24').clearContent();
+    ps.getRange('W23:W24').clearContent();
+    ps.getRange('Y23:Y24').clearContent();
 
 }   
 

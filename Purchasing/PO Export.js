@@ -150,7 +150,17 @@ function compilePurchaseOrderPdf() {
 
 function sendPurchaseOrderEmail(blob) {
 
-    let email = ds.getRange('D12').getValue();
+    // gets the actual emails in the format of 'xx@email.com;yy@email.com';
+    let emailsRaw = ds.getRange('D12').getValue();
+
+    // splits the email using ; as separator
+    let emails = emailsRaw.split(';');
+    let email = emails[0];
+    let ccEmail = emails[1];
+
+    // send emails 
+   
+
     let poNumber = ds.getRange('D20').getValue();
     let subject = 'Purchase Order #' + poNumber;
     let contact = ds.getRange('D11').getValue();
@@ -158,6 +168,7 @@ function sendPurchaseOrderEmail(blob) {
 
     GmailApp.sendEmail(email, subject, body, {
         htmlBody: body,
+        cc: ccEmail,
         attachments: [{
               fileName: "PO# "+ poNumber + ".pdf",
               content: blob.getBytes(),
