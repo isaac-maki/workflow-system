@@ -1,3 +1,9 @@
+const qc = {
+    lot: 'lot',
+    cid: 'cid',
+    currentRow: 0
+};
+
 function boolPassSpecification(specificationArray, result) {
 
    let type = specificationArray[0];
@@ -41,8 +47,18 @@ function boolPassSpecification(specificationArray, result) {
    return outcome;
 }
 
-function pullSpecification(cid, methodId) {
+function pullBasicData(){
 
+    //saves basic data so we don't pull it every time.
+
+    let lot = ma.getRange('C6').getValue();
+    let cid = ma.getRange('C10').getValue();
+    qc.cid = cid;
+    qc.lot = lot;
+}
+
+function pullSpecification(cid, methodId) {
+    Logger.log(cid + '-' + methodId);
     let cidMethod = cid + '-' + methodId;
     let row = CoffeeMaki.determineRowExternalSheet(sp, 'C6:C', 6, cidMethod);
     Logger.log(row)
@@ -54,7 +70,7 @@ function pullSpecification(cid, methodId) {
 
 function pullResult(method) {
 
-    let lot = qc.lot;
+    let lot = ma.getRange('C6').getValue();
     let lotMethod = lot + '-' + method;
     let row = CoffeeMaki.determineRowExternalSheet(re, 'C6:C', 6, lotMethod);
     qc.currentRow = row;
@@ -67,15 +83,7 @@ function pullResult(method) {
 
 }
 
-function pullBasicData(){
 
-    //saves basic data so we don't pull it every time.
-
-    let lot = ma.getRange('C6').getValue();
-    let cid = ma.getRange('C10').getValue();
-    qc.cid = cid;
-    qc.lot = lot;
-}
 
 function buildSpecificationText(specificationArray) {
 
@@ -100,7 +108,7 @@ function buildSpecificationText(specificationArray) {
 function buildExamResultsArray() {
 
     let items = CoffeeMaki.getDataArray(ma, 'P4', 'P6:P', 5);
-    let cid = qc.cid;
+    let cid = ma.getRange('C10').getValue();
     let array = [];
     let i = 0;
     

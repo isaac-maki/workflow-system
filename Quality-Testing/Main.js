@@ -9,16 +9,14 @@ const ui = SpreadsheetApp.getUi();
 const ma = ss.getSheetByName('Main');
 const re = ss.getSheetByName('Results');
 const sp = ss.getSheetByName('Specifications');
+const co = ss.getSheetByName('COA');
 
 
 
 // global objects
 
-const qc = {
-    lot: 'lot',
-    cid: 'cid',
-    currentRow: 0
-};
+
+
 
 // Menu
 
