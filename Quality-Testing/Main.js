@@ -10,7 +10,7 @@ const ma = ss.getSheetByName('Main');
 const re = ss.getSheetByName('Results');
 const sp = ss.getSheetByName('Specifications');
 const co = ss.getSheetByName('COA');
-
+const ar = ss.getSheetByName('Archive');
 
 
 // global objects

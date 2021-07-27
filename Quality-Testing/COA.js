@@ -5,7 +5,8 @@ const coa = {
     cid: 'cid',
     name: 'name',
     specifications: [],
-    alias: 'lot'
+    alias: 'lot',
+    publicCoaUrl: 'url'
 };
 
 function pullBasicData() {
@@ -37,6 +38,16 @@ function pullBasicData() {
     // pull lot alias
     let alias = co.getRange('Y6').getValue();
     coa.alias = alias;
+
+
+}
+
+function pullTechnicalNote(lotMid) {
+    
+    let row = CoffeeMaki.determineRowExternalSheet(re, 'C6:C', 6, lotMid);
+    Logger.log(row);
+    let note = re.getRange('K' + row).getValue();
+    return note;
 
 }
 
@@ -82,23 +93,61 @@ function utilityDeconstructLot() {
     return date;
 }
 
-function initateCoa() {
+function utilityGenerateCoaPdf() {
 
-    pullBasicData();
-    if (passedSpecicifcation()) {
-        initiateCoaGeneration();
-    } else {
-        ui.alert('This did not pass specification. Please investigate.');
-        // perhaps in the future log this and send an alert
-    }
+    const url = 'https://docs.google.com/spreadsheets/d/1ewZrhTsb6nvmabnYIGDFEPozOn_EKoDrX6GoR17mxRM/export?';
+
+
+    let filename = `${coa.name} [${coa.lot}] COA.pdf`;
+
+    // PDF Options
+
+    pdfOptions =
+        'exportFormat=pdf&format=pdf' +
+        '&size=letter' +
+        '&portrait=true' +
+        '&fitw=true' +
+        '&top_margin=0.20' +            
+        '&bottom_margin=0.20' +         
+        '&left_margin=0.20' +        
+        '&right_margin=0.20' + 
+        '&sheetnames=false&printtitle=false' +
+        '&pagenumbers=false&gridlines=false' +
+        '&fzr=false' +
+        '&gid=254779435';
+    
+    // PDF parameters 
+
+    var params = {method:"GET",headers:{"authorization":"Bearer "+ ScriptApp.getOAuthToken()}};
+
+    // PDF generation
+    
+    var response = UrlFetchApp.fetch(url+pdfOptions, params).getBlob();
+
+    // File parameters
+    var folder = DriveApp.getFolderById('1cwwk-OAg3YivfvX05-EfzrCv7HfGEFOV'); 
+
+    // Save file to google drive
+    let document = folder.createFile(response.setName(filename));
+
+    let documentUrl = document.getUrl();
+
+    coa.publicCoaUrl = documentUrl;
+     
 
 }
 
-function initiateCoaGeneration() {
-    pullBasicData();
-    dropCoaProductDetails();
-    dropCoaSpecificationTable();
-    dropCoaAdditionalNotes();
+function utilityBuildPdfIcon(url) {
+    
+    let icon = 'https://i.imgur.com/8GbOraM.png';
+    let formula = `=HYPERLINK(\"${url}\",IMAGE(\"${icon}\"))`;
+    return formula;
+
+}
+
+function utilityWait(){
+    var lock = LockService.getScriptLock(); lock.waitLock(300000); 
+    SpreadsheetApp.flush(); lock.releaseLock();
 }
 
 
@@ -135,21 +184,87 @@ function dropCoaSpecificationTable() {
 
 }
 
-function dropCoaAdditionalNotes() {
-
-    let parameters = [];
+function dropCoaTechnicallNotes() {
     let array = coa.specifications;
+    let lot = coa.lot;
+    let notes = [];
 
+    // pull notes and build notes array
     for (let i = 0; i < array.length; i++) {
-        let mid = parameters.push(array[i][0]);
-        switch (cid) {
-            case value:
-                
+
+        let mid = array[i][0];
+        let lotMid =  lot + '-' + mid;
+
+        switch (mid) {
+            case 'AV-0022':
+                notes.push([mid,null,pullTechnicalNote(lotMid)]);
                 break;
-        
+            case 'XG-7752':
+                notes.push([mid,null,pullTechnicalNote(lotMid)]);
+                break;
             default:
                 break;
         }
+    }
+    
+    // drop notes if any
+
+    if (notes.length > 0) {
+
+        co.getRange('B111:D' + (110 + notes.length)).setValues(notes);
+
+    } else {
+        Logger.log("No technical notes to log.");
+    }
+}
+
+function dropCoaArchive() {
+
+    // defining variabes
+    let pdf = utilityBuildPdfIcon(coa.publicCoaUrl);
+    let qcStatus = 'Pass'; // if a coa is generated it means it passed.
+    let internalNotes = ma.getRange('Y10').getValue();
+    let creationDate = new Date();
+
+    // build payload
+    let payload = [[coa.lot, coa.cid, coa.name, qcStatus, creationDate, coa.date, coa.expiry, pdf,coa.publicCoaUrl, internalNotes]];
+
+
+
+    // delivery
+    let range = CoffeeMaki.dropZoneRangeAlt(ar, 'C', 'L', 6, 'C4', payload.length);
+    range.setValues(payload);
+    CoffeeMaki.setBorderStandard(range);
+    CoffeeMaki.rangeSort(ar, 'C', 'L', 6, 'C4');
+
+}
+
+function initiateCoaGeneration() {
+    coaClearContents()
+    pullBasicData();
+
+    // drop coa sections
+    dropCoaProductDetails();
+    dropCoaSpecificationTable();
+    dropCoaTechnicallNotes();
+
+    // generate coa
+    utilityWait();
+    utilityGenerateCoaPdf() 
+
+    // commit to archive
+    dropCoaArchive();
+    executeMainResets();
+}
+
+function initateCoa() {
+
+    pullBasicData();
+    if (passedSpecicifcation()) {
+        initiateCoaGeneration();
+    } else {
+        ui.alert('This did not pass specification. Please investigate.');
+        // perhaps in the future log this and send an alert
     }
 
 }
