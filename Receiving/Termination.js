@@ -11,7 +11,10 @@ function termination() {
     logPurchaseOrderDrop();
     logComponentsDrop();
     transactionDrop();
+    
+    
     updateSitesWhenReceiving(); 
+    
     
     clearReceive();
     resetPrintedBoolean();
@@ -161,7 +164,7 @@ function transactionDrop() {
         let amount;
         if (uom !== 'lbs') {
             let toConvert = dataArray[i][4];
-            let amount = unitConverter(uom, value);
+            amount = unitConverter(uom, toConvert);
 
         } else {
             amount = dataArray[i][4];

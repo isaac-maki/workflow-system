@@ -6,7 +6,7 @@ function generateBprPdf() {
     let batchNumber = bu.getRange('D23').getValue();
     let productName = bu.getRange('D19').getValue();
 
-    let filename = `${bprNumber} - ${batchNumber} - ${productName}`
+    let filename = `${bprNumber} - ${batchNumber} - ${productName}.pdf`
 
     // PDF Options
 
