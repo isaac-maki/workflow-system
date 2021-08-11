@@ -1,9 +1,14 @@
 // === GLOBAL === //
 
+/* Actionabales = Tasks
+/  When I was first Developing this is was made
+/  as an update to the existing appsheet, which already had
+/  tasks as a name. Hence the weird name.
+*/
+
 // Document 
 DocumentApp.getActiveDocument();
 const ss = SpreadsheetApp.getActive();
-let ui = SpreadsheetApp.getUi();
 
 // Sheets
 
@@ -135,6 +140,12 @@ function findNextActionableDate(frequency) {
         }
         case 'Mondays': {
             nextDate = getNextDayOfWeek(nextDate, 1);
+            break;
+        }
+        case 'Monthly': {
+            
+            nextDate.setDate(nextDate.getDate() + 30);
+
             break;
         }
         default:
