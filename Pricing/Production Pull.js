@@ -9,7 +9,7 @@ const productionData = {
 function boolBatchIsScent(mbprId) {
 
     // this determines if the batch is a scent blend
-    let suffix = mbprId.slice(0,2);
+    let suffix = mbprId.slice(0, 2);
 
     if (suffix === 'EO' || suffix === 'FO') {
 
@@ -26,7 +26,7 @@ function boolBatchIsScent(mbprId) {
 function pullBatchSize() {
 
     let mbprId = pd.getRange('D8').getValue();
-    
+
     let lookupRow = CoffeeMaki.determineRowExternalSheet(fd, "D6:D", 6, mbprId);
 
     let batchSize = fd.getRange('E' + lookupRow).getValue();
@@ -40,13 +40,13 @@ function pullBatchTime() {
     let mbprId = pd.getRange('D8').getValue();
     boolBatchIsScent(mbprId);
     let time;
-    
+
     if (productionData.scentFormula) {
 
         time = 0.083;
 
     } else {
-    
+
         let lookupRow = CoffeeMaki.determineRowExternalSheet(fd, "V6:V", 6, mbprId);
 
         time = fd.getRange('W' + lookupRow).getValue();
@@ -55,7 +55,7 @@ function pullBatchTime() {
 
     return time;
 
- }
+}
 
 
 
@@ -65,7 +65,7 @@ function pullBillOfMaterials() {
     let bomMasterArray = fd.getRange('I6:K' + (5 + fd.getRange('I4').getValue())).getValues();
 
 
-    let billOfMaterials = bomMasterArray.filter(function(row) {
+    let billOfMaterials = bomMasterArray.filter(function (row) {
 
         return row[0] === mbprId;
 
@@ -79,17 +79,17 @@ function pullLastPrice(cid) {
 
     // sets the purchases archive equal to data
     let data = productionData.purchasesArchive[0];
-    
+
 
     // finds the index of the last po that the component with cid was purchased
-    let purchases = data.filter(function(component) {
+    let purchases = data.filter(function (component) {
 
         return component[0] === cid;
     });
 
     let purchaseOrders = purchases.map(x => x[1]);
-    
-    let maxIndex = purchaseOrders.indexOf(Math.max.apply(null,purchaseOrders));
+
+    let maxIndex = purchaseOrders.indexOf(Math.max.apply(null, purchaseOrders));
 
     // cheeks if unit must be converted
     // if so it converts, otherwise it is printed from purchases
@@ -99,12 +99,12 @@ function pullLastPrice(cid) {
 
     if (uom === 'kg' || uom === 'kgs') {
 
-        price = price/2.20462;
+        price = price / 2.20462;
 
-    } 
+    }
 
     return price;
-  
+
 }
 
 function pullProductionHistory() {
@@ -116,7 +116,7 @@ function pullProductionHistory() {
     let i = 0;
     let history = [];
 
-    let historyRaw = data.filter(function(entry) {
+    let historyRaw = data.filter(function (entry) {
 
         return entry[0] === cid;
 
@@ -158,10 +158,10 @@ function pullFillWeights() {
         }
 
     } else {
-        
+
         let data = pd.getRange('N6:N14').getValues().flat();
         for (let i = 1; i <= data.length; i += 2) {
-            data.splice(i,1);
+            data.splice(i, 1);
         }
         let chunkedData = chunkSelection(data);
 
@@ -181,7 +181,7 @@ function chunkSelection(array) {
 
     for (let i = 0; i < array.length; i++) {
 
-        if ( i % 2 === 0) {
+        if (i % 2 === 0) {
 
             // begin a new array
             chunkedArray.push([array[i]]);
@@ -230,7 +230,7 @@ function assembleBillOfMaterialsCosting() {
         let costPerPoundProduct = markup * (concentration * 0.01);
 
 
-        assembly.push([row,cid, nameFormula, concentration, lastPrice, markup, costPerPoundProduct]);
+        assembly.push([row, cid, nameFormula, concentration, lastPrice, markup, costPerPoundProduct]);
         i++;
     }
 
@@ -291,6 +291,39 @@ function injectProductionHistory() {
 
 }
 
+function updateCosting() {
+    updateCostingBillOfMaterials();
+}
+
+function updateCostingBillOfMaterials() {
+
+    // assemble declarations
+    let rawMaterialMarkupPercentage = st.getRange('C6').getValue();
+    let bomData = ps.getRange("J6:K30").getValues();
+
+    // assemble
+    let i = 0;
+    let assembly = [];
+
+    while (i < bomData.length) {
+        let price = bomData[i][1];
+        let concentration = bomData[i][0];
+
+        if (price) {
+
+            let markup = price * rawMaterialMarkupPercentage;
+            let costPerPoundProduct = markup * (concentration * 0.01);
+
+            assembly.push([markup, costPerPoundProduct]);
+        } 
+        i++;
+    }
+
+    let range = ps.getRange("L6:M" + (5 + assembly.length));
+    range.setValues(assembly);
+}
+
+
 function clearProductionDataResetButton() {
 
     // this is necessary because the reset button also clears the selected base. however, when clear production data is triggered from the injectproductiondata function, the selected base cannot be cleared.
@@ -339,7 +372,7 @@ function clearProductionFillWeights() {
     ps.getRange('W23:W24').clearContent();
     ps.getRange('Y23:Y24').clearContent();
 
-}   
+}
 
 function clearProductionHistory() {
 
